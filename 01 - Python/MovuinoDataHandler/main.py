@@ -6,17 +6,19 @@ import numpy as np
 from integratinoFunctions import *
 from DisplayFunctions import Display
 from mvtAnalyseFunctions import OnGround
+import DataManager as dm
 import os
 
 
 folderPath = "..\\..\\Data\\SessionMuette_16_04_2021\\"
-fileName = "complete_session"
+fileName = "record_1"
 fullDataPath = folderPath + fileName
 
 
 toDataManage = True
-toExtract = True
+toExtract = False
 
+thrd_list = []
 
 # --------- Data Extraction from Movuino ----------
 if toExtract:
@@ -39,17 +41,26 @@ if toExtract:
             ExtractionCompleted = True
             print("End of data sheet")
 
-            with open(fullDataPath + ".csv", "w") as file:
+            with open(fullDataPath + "_" + str(nbRecord) + ".csv", "w") as file:
                 file.writelines(datafile)
+            if toDataManage:
+                thrd_list.append(dm.MovuinoDataSet(fullDataPath + "_" + str(nbRecord)))
+                thrd_list[-1].start()
 
         if ("NEW RECORD" in line_str and isReading == True):
-            nbRecord += 0
+
             print("NEW RECORD : " + str(nbRecord))
 
             with open(fullDataPath + "_" + str(nbRecord) + ".csv", "w") as file:
                 file.writelines(datafile)
             datafile = []
             line_str = ''
+
+            if toDataManage:
+                thrd_list.append(dm.MovuinoDataSet(fullDataPath + "_" + str(nbRecord)))
+                thrd_list[-1].start()
+            nbRecord += 1
+
 
         if (isReading):
             if line_str != '':
@@ -59,6 +70,11 @@ if toExtract:
         if ("XXX_beginning" in line_str):
             isReading = True
 
+
+if toDataManage and not toExtract:
+    thrd = dm.MovuinoDataSet(fullDataPath)
+    thrd.start()
+"""
 #Data MAnage
 if toDataManage:
 
@@ -88,7 +104,6 @@ if toDataManage:
         normAcceleration.append(np.linalg.norm(acceleration[k]))
         normGyroscope.append(np.linalg.norm(gyroscope[k]))
 
-    """
     for i in range(3):
         velocity[i] = Euler(time, acceleration[i], velocity[i][0])
         pos[i] = Euler(time, velocity[i], pos[i][0])
@@ -101,13 +116,13 @@ if toDataManage:
     Display("a,v,pos", time, acceleration, velocity, pos)
     Display("omega, theta", time, gyroscope, posAng)
     Display("Magnetometer", time, magnetometer)
-    """
+
     print(acceleration)
     acceleration = np.array(acceleration)
     print(acceleration[:,0])
     #Display("a", time, acceleration[:,0])
 
-    """
+
     rawData["posAngX"] = posAng[0]
     rawData["posAngY"] = posAng[1]
     rawData["posAngZ"] = posAng[2]
@@ -117,7 +132,7 @@ if toDataManage:
     rawData["posX"] = pos[0]
     rawData["posY"] = pos[1]
     rawData["posZ"] = pos[2]
-    """
+
     rawData["normAccel"] = normAcceleration
     rawData["normGyr"] = normGyroscope
     plt.figure()
@@ -129,3 +144,4 @@ if toDataManage:
 
 
     rawData.to_csv(fullDataPath + "_treated" + ".csv", sep=",", index=False, index_label=False)
+"""
