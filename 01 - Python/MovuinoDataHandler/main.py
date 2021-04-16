@@ -9,13 +9,13 @@ from mvtAnalyseFunctions import OnGround
 import os
 
 
-folderPath = "..\\..\\Data\\TestSImpleMouvement\\"
-fileName = "TestSImpleMouvement2"
+folderPath = "..\\..\\Data\\SessionMuette_16_04_2021\\"
+fileName = "complete_session"
 fullDataPath = folderPath + fileName
 
 
 toDataManage = True
-toExtract = False
+toExtract = True
 
 
 # --------- Data Extraction from Movuino ----------
@@ -28,6 +28,7 @@ if toExtract:
     line_str = ''
     datafile = []
     nbRecord = 1
+
     while ExtractionCompleted != True :
 
         line_byte = arduino.readline()
@@ -48,10 +49,12 @@ if toExtract:
             with open(fullDataPath + "_" + str(nbRecord) + ".csv", "w") as file:
                 file.writelines(datafile)
             datafile = []
+            line_str = ''
 
         if (isReading):
-            datafile.append(line_str[:-1])
-            print("Add Data")
+            if line_str != '':
+                datafile.append(line_str[:-1])
+                print("Add Data")
 
         if ("XXX_beginning" in line_str):
             isReading = True
@@ -125,4 +128,4 @@ if toDataManage:
     plt.show()
 
 
-    #rawData.to_csv(fullDataPath + "_treated" + ".csv", sep=",", index=False, index_label=False)
+    rawData.to_csv(fullDataPath + "_treated" + ".csv", sep=",", index=False, index_label=False)
