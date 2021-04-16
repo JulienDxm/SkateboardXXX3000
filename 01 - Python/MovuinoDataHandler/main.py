@@ -62,30 +62,30 @@ if toDataManage:
     rawData = pd.read_csv(fullDataPath + ".csv", sep=",")
 
     time = []
-    acceleration = [[], [], []]
-    gyroscope = [[], [], []]
-    magnetometer = [[], [], []]
+
+    # liste de vecteurs numpy
+    acceleration = []
+    gyroscope = []
+    magnetometer = []
 
     normAcceleration = []
     normGyroscope = []
     normMagnetometer = []
 
-    velocity = [[0], [0], [0]]
-    pos = [[0], [0], [0]]
-    posAng = [[0], [0], [0]]
-    rawData["time"] = [k for k in range(len(rawData["ax"]))]
+    velocity = [np.array([[0], [0], [0]])]
+    pos = [np.array([[0], [0], [0]])]
+    posAng = [np.array([[0], [0], [0]])]
+
     time = list(rawData["time"])
+    for k in range(len(rawData["ax"])):
+        acceleration.append(np.array([rawData["ax"][k], rawData["ay"][k], rawData["az"][k]]))
+        gyroscope.append(np.array([rawData["gx"][k], rawData["gy"][k], rawData["gz"][k]]))
+        magnetometer.append(np.array([rawData["mx"][k], rawData["my"][k], rawData["mz"][k]]))
 
-    acceleration[0] = np.append(acceleration[0], list(rawData["ax"])) # accelX
-    acceleration[1] = list(rawData["ay"])  # accelY
-    acceleration[2] = list(rawData["az"])  # accelZ
-    gyroscope[0] = list(rawData["gx"])  # gyroX
-    gyroscope[1] = list(rawData["gy"])  # gyroY
-    gyroscope[2] = list(rawData["gz"])  # gyroZ
-    magnetometer[0] = list(rawData["mx"])  # magX
-    magnetometer[1] = list(rawData["my"])  # magY
-    magnetometer[2] = list(rawData["mz"])  # magZ
+        normAcceleration.append(np.linalg.norm(acceleration[k]))
+        normGyroscope.append(np.linalg.norm(gyroscope[k]))
 
+    """
     for i in range(3):
         velocity[i] = Euler(time, acceleration[i], velocity[i][0])
         pos[i] = Euler(time, velocity[i], pos[i][0])
@@ -98,9 +98,13 @@ if toDataManage:
     Display("a,v,pos", time, acceleration, velocity, pos)
     Display("omega, theta", time, gyroscope, posAng)
     Display("Magnetometer", time, magnetometer)
+    """
+    print(acceleration)
+    acceleration = np.array(acceleration)
+    print(acceleration[:,0])
+    #Display("a", time, acceleration[:,0])
 
-    Display("a", time, acceleration)
-
+    """
     rawData["posAngX"] = posAng[0]
     rawData["posAngY"] = posAng[1]
     rawData["posAngZ"] = posAng[2]
@@ -110,12 +114,15 @@ if toDataManage:
     rawData["posX"] = pos[0]
     rawData["posY"] = pos[1]
     rawData["posZ"] = pos[2]
-
+    """
     rawData["normAccel"] = normAcceleration
     rawData["normGyr"] = normGyroscope
     plt.figure()
     plt.plot(time, normAcceleration)
+    plt.plot(time, acceleration[:,0])
+    plt.plot(time, acceleration[:,1])
+    plt.plot(time, acceleration[:,2])
     plt.show()
 
 
-    rawData.to_csv(fullDataPath + "_treated" + ".csv", sep=",", index=False, index_label=False)
+    #rawData.to_csv(fullDataPath + "_treated" + ".csv", sep=",", index=False, index_label=False)

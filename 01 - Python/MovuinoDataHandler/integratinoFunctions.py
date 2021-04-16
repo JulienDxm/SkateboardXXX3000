@@ -19,10 +19,10 @@ def Offset(L):
 """
 
 
-def EuclidienNorm(V):
+def EuclidienNorm(V) :
     norm = 0
     for i in range(len(V)):
-        norm += V[0]**2
+        norm += V[i]**2
     return np.sqrt(norm)
 
 def EuclidienNormListVector(listV):
