@@ -1,22 +1,17 @@
-import serial
-import DataManager as dm
-import OnlyExtract as extractMovDat
+import pandas as pd
+import numpy as np
 import os
-
-folderPath = "..\\..\\Data\\TemplateData\\"
-fileName = "simple_data_set"
-
-path = folderPath + fileName
-
-serialPort = 'COM13'
-
-toDataManage = True
-toExtract = True
-
-nb_files = 0
+import serial
 
 # --------- Data Extraction from Movuino ----------
-if toExtract:
+def ExtractData(serialPort, path):
+
+    """
+
+    :param serialPort: port to listen
+    :param path: path of extracted files
+    :return: number of files created
+    """
 
     isReading = False
     ExtractionCompleted = False
@@ -26,7 +21,7 @@ if toExtract:
     datafile = []
     nbRecord = 1
 
-    while ExtractionCompleted != True:
+    while ExtractionCompleted != True :
         line_byte = arduino.readline()
         line_str = line_byte.decode("utf-8")
 
@@ -54,8 +49,4 @@ if toExtract:
         if ("XXX_beginning" in line_str):
             isReading = True
 
-
-if toDataManage:
-    for i in range(nbRecord):
-        dataSet = dm.MovuinoDataSet(path + "_" + str(i+1))
-        dataSet.run()
+        return nbRecord

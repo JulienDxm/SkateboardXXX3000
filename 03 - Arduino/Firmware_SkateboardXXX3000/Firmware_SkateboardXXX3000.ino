@@ -74,6 +74,7 @@ void setup() {
 
   //NEOPIXEL setup
   pixel.begin();
+  
   //Button - function that we will use
   button.callback(onButtonPress, PRESS);
   button.callback(onButtonRelease, RELEASE);
@@ -149,7 +150,6 @@ void loop() {
   //---------- Creating File -----------
   if (doubleTap)
   {
-    Serial.print(isEditable);
     doubleTap = false;
     if(isEditable == false)
     {
