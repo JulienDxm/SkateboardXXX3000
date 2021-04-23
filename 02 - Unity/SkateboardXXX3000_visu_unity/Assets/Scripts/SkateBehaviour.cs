@@ -19,10 +19,18 @@ namespace Skateboard
         private int i;
         private bool end;
 
+        
 
         private void Start()
         {
+            
             movuinoDataSet = new MovuinoDataSet(dataPath);
+            float c = (float)Convert.ToDouble(movuinoDataSet.table[0]["ax"], CultureInfo.InvariantCulture);
+            Debug.Log(movuinoDataSet.rawData.Columns["ax"].DataType);
+            Debug.Log(new Vector3((float)movuinoDataSet.table[5]["ax"],0,0));
+
+            Debug.Log(movuinoDataSet.GetValue("ax", 5));
+            Debug.Log(movuinoDataSet.GetAcceleration(5));
         }
 
 

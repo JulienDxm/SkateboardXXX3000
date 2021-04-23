@@ -2,6 +2,7 @@
 using System.IO;
 using System.Globalization;
 using System.Collections;
+using System.Data;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -11,27 +12,107 @@ namespace Movuino
     {
 
         private string dataPath;
-        List<object[]> rawData = new List<object[]>();
+        List<object[]> rawData_ = new List<object[]>();
+        DataTable _rawData;
 
-        object[] time;
-        object[] acceleration;
-        object[] gyroscope;
-        object[] magnetometer;
+          
+        public DataTable rawData
+        {
+            get { return _rawData; }
+        }
 
-        object[] theta;
-        object[] velocity;
-        object[] pos;
-
-        float[] normAccel;
-        float[] normGyr;
-
-
+        public DataRowCollection table
+        {
+            get { return _rawData.Rows; }
+        }
         public MovuinoDataSet(string dataPath)
         {
             Debug.Log("Reading... " + dataPath);
-            rawData = ReadCSV(dataPath);
-
+            //rawData_ = ReadCSV(dataPath);
+            _rawData = ConvertCSVtoDataTable(dataPath);
             
+        }
+
+        public Vector3 GetVector(string columnX, string columnY, string columnZ, int i)
+        {
+            float x = GetValue(columnX, i);
+            float y = GetValue(columnY, i);
+            float z = GetValue(columnZ, i);
+            return new Vector3(x, y, z);
+        }
+
+        public Vector3 GetAcceleration(int i)
+        {
+            return GetVector("ax", "ay", "az", i);
+        }
+
+        public Vector3 GetGyroscope(int i)
+        {
+            return GetVector("gx", "gy", "gz", i);
+        }
+
+        public Vector3 GetMagnetometre(int i)
+        {
+            return GetVector("mx", "my", "mz", i);
+        }
+
+        /// <summary>
+        /// Get a complete column.
+        /// </summary>
+        /// <param name="columnName"></param>
+        /// <returns>List of floats <=> dataTable.[columnName].Value</returns>
+        public List<float> GetColumn(string columnName)
+        {
+            List<float> column = new List<float>();
+
+            for (int i = 0; i<_rawData.Columns.Count; i++)
+            {
+                column.Add(GetValue(columnName, i));
+            }
+
+            return column;
+        }
+
+        /// <summary>
+        /// Get the value of (float)rawData.Rows[index][columnName].
+        /// </summary>
+        /// <param name="columnName">Column name.</param>
+        /// <param name="index">Index of the line.</param>
+        /// <returns>Result : (float)_rawData.Rows[index][columnName]</returns>
+        public float GetValue(string columnName, int index)
+        {
+            return (float)_rawData.Rows[index][columnName];
+        }
+
+        /// <summary>
+        /// Convert a csv file to a datatable.
+        /// </summary>
+        /// <param name="strFilePath">Path of the csv file.</param>
+        /// <returns>Result</returns>
+        /// <remarks>Column type is float/System.Single.</remarks>
+        public static DataTable ConvertCSVtoDataTable(string strFilePath)
+        {
+            StreamReader sr = new StreamReader(strFilePath);
+            string[] headers = sr.ReadLine().Split(',');
+            DataTable dt = new DataTable();
+            
+            foreach (string header in headers)
+            {
+                dt.Columns.Add(header);
+                dt.Columns[header].DataType = typeof(float);
+            }
+            CultureInfo culture = new CultureInfo("en-US");
+            while (!sr.EndOfStream)
+            {
+                string[] rows = sr.ReadLine().Split(',');
+                DataRow dr = dt.NewRow();
+                for (int i = 0; i < headers.Length; i++)
+                {
+                    dr[i] = float.Parse(rows[i], culture);
+                }
+                dt.Rows.Add(dr);
+            }
+            return dt;
         }
 
         List<object[]> ReadCSV(string dataPath)
@@ -101,11 +182,8 @@ namespace Movuino
                 value = "";
                 line = sr.ReadLine();
             }
-            Debug.Log(data[0][1]);
             return data;
         }
-
-
 
     }
 
