@@ -115,6 +115,14 @@ namespace Movuino
             return dt;
         }
 
+        public void showColumns()
+        {
+            foreach (DataColumn c in this.rawData.Columns)
+            {
+                Debug.Log(c.ColumnName);
+            }
+        }
+
         List<object[]> ReadCSV(string dataPath)
         {
 
