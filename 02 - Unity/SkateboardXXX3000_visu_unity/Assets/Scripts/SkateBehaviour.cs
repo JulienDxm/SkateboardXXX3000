@@ -13,7 +13,8 @@ namespace Skateboard
     {
         private MovuinoDataSet movuinoDataSet;
 
-        private string dataPath = ".\\Data_visu\\Movuino-heel_50HZ_smooth15treated.csv";
+        //private string dataPath = ".\\Data_visu\\Movuino-heel_50HZ_smooth15treated.csv";
+        private string dataPath = ".\\Data_visu\\record_simpleMove_1_treated.csv";
 
         private float startTime;
         private int i;
@@ -28,14 +29,13 @@ namespace Skateboard
             i = 1;
 
             movuinoDataSet.showColumns();
-
+            InvokeRepeating("Rotate", 2f, 0.02f);
         }
 
-        private void Update()
+        private void Rotate()
         {
             Vector3 deltaTheta = movuinoDataSet.GetVector("posAngX", "posAngY", "posAngZ", i) - movuinoDataSet.GetVector("posAngX", "posAngY", "posAngZ", i-1);
-
-            this.gameObject.transform.Rotate(deltaTheta*(float)(360/(2*3.14)));
+            this.gameObject.transform.Rotate(deltaTheta);
 
             i++;
         }

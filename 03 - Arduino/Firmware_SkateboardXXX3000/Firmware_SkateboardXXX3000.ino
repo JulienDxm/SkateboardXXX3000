@@ -73,7 +73,7 @@ void setup() {
   button.attach(pinBtn, INPUT_PULLUP); // pin configured to pull-up mode
 
   //NEOPIXEL setup
-  pixel.begin();
+  //pixel.begin();
   
   //Button - function that we will use
   button.callback(onButtonPress, PRESS);
@@ -220,7 +220,7 @@ void loop() {
     }
   }
 
-  delay(25);
+  delay(0.5);
 }
 
 void blink3Times()
