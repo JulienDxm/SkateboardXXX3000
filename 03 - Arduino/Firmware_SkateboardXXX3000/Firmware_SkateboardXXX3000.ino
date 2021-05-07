@@ -25,9 +25,9 @@
 
 #define MPU_I2C_ADDRESS 0x69
 
+
 // SENSOR
 MPU9250 IMU(Wire, MPU_I2C_ADDRESS);
-int status;
 
 float time, startTime;
 float ax, ay, az; // store accelerometre values
@@ -64,32 +64,19 @@ bool isEditable = false;
 bool isReadable = false;
 bool formatted;
 
-
 void setup() {
-  // pin setup
-  //pinMode(pinBtn, INPUT_PULLUP); // pin for the button
-  pinMode(pinLedESP, OUTPUT);   // pin for the wifi led
-  pinMode(pinLedBat, OUTPUT);    // pin for the battery led
-  button.attach(pinBtn, INPUT_PULLUP); // pin configured to pull-up mode
-
-  //NEOPIXEL setup
-  //pixel.begin();
-  
-  //Button - function that we will use
-  button.callback(onButtonPress, PRESS);
-  button.callback(onButtonRelease, RELEASE);
-  button.callback(onButtonHold, HOLD); // called on either event
-  button.callback(onButtondoubleTap, DOUBLE_TAP);
-  
   Wire.begin();
   Serial.begin(115200);
   delay(2000);
   
-  SPIFFS.begin();
-  
   // initialize device
   Serial.println("Initializing I2C devices...");
-  status = IMU.begin();
+  
+  //----- SPIFF -----
+  SPIFFS.begin();
+
+  //----- MPU -----
+  int status = IMU.begin();
   
   if (status < 0) {
     Serial.println("IMU initialization unsuccessful");
@@ -98,13 +85,40 @@ void setup() {
     Serial.println(status);
     while(1) {}
   }
+  
+  int statusGyro = IMU.setGyroRange(MPU9250::GYRO_RANGE_2000DPS);
+  int statusAccel = IMU.setAccelRange(MPU9250::ACCEL_RANGE_16G);
+  if (statusGyro<0 || statusAccel<0) {
+    Serial.println("ERROR while setting range :");
+    Serial.println("Accel range : " + statusAccel);
+    Serial.println("Gyro range : " + statusGyro);
+  } else {
+    Serial.println("RAS for the range");
+  }
+  
+  //----- pin setup -----
+  //pinMode(pinBtn, INPUT_PULLUP); // pin for the button
+  pinMode(pinLedESP, OUTPUT);   // pin for the wifi led
+  pinMode(pinLedBat, OUTPUT);    // pin for the battery led
+  button.attach(pinBtn, INPUT_PULLUP); // pin configured to pull-up mode
+
+  //----- NEOPIXEL setup -----
+  //pixel.begin();
+  
+  //Button - function that we will use
+  button.callback(onButtonPress, PRESS);
+  button.callback(onButtonRelease, RELEASE);
+  button.callback(onButtonHold, HOLD); // called on either event
+  button.callback(onButtondoubleTap, DOUBLE_TAP);
+  
+
 }
 
 void loop() {
   
   button.update();
 
-  //------ Read serial Monitor -----------
+  //--------- Read serial Monitor -----------
   if (Serial.available()>0)
   {
     char serialMessage = Serial.read();
@@ -112,7 +126,7 @@ void loop() {
     Serial.print("Message received : ");
     Serial.println(serialMessage);  
 
-    //----- Serial command ----
+    //--------- Serial command -------------
     switch (serialMessage)
     {
       case CMD_FORMAT_SPIFFS:
@@ -158,6 +172,7 @@ void loop() {
       startTime = millis();
       
       Serial.println("Writing in " + filePath);
+      //---- If the file already exists we write after it
       if (SPIFFS.exists(filePath))
       {
         file = SPIFFS.open(filePath, "a");     
@@ -167,15 +182,12 @@ void loop() {
       } 
       else 
       {
-        
         createFile(filePath);
       }
-
     } 
     else 
     {
       Serial.println();
-      
       Serial.println("Stopping the continue edition of " + filePath);
       isEditable = false;
       blinkLongTimes();
@@ -184,7 +196,7 @@ void loop() {
   }
 
 
-    // GET MOVUINO DATA
+    //----- GET MPU DATA ------
   IMU.readSensor();
   //print9axesDataMPU(IMU);
   get9axesDataMPU(IMU, &ax, &ay, &az, &gx, &gy, &gz, &mx, &my, &mz);
@@ -195,13 +207,13 @@ void loop() {
   {
     writeData(filePath);
   }
-  
+
+  //------- Reading file ---------------
   if (isReadable)
   {
     Serial.println();
     Serial.println("reading " + filePath + "...");
     readFile(filePath);
-    
     isReadable = false;
   }
 
@@ -220,7 +232,7 @@ void loop() {
     }
   }
 
-  delay(0.5);
+  delay(1);
 }
 
 void blink3Times()

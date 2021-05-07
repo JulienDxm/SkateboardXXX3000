@@ -46,6 +46,7 @@ class MovuinoDataSet():
         self.posAngAcc_filter = []
 
         self.time = list(self.rawData["time"]*0.001)
+        self.rawData["time"] = self.time
 
         self.Te = (self.time[-1]-self.time[0])/(len(self.time))
 
@@ -74,9 +75,9 @@ class MovuinoDataSet():
             self.normAcceleration.append(np.linalg.norm(self.acceleration[k]))
             self.normGyroscope.append(np.linalg.norm(self.gyroscope[k]))
 
-        self.EulerIntegration(self.acceleration, self.velocity)
-        self.EulerIntegration(self.gyroscope, self.posAngGyr)
-        self.EulerIntegration(self.velocity, self.pos)
+        self.velocity = self.EulerIntegration(self.acceleration)
+        self.posAngGyr = self.EulerIntegration(self.gyroscope)
+        self.pos = self.EulerIntegration(self.velocity)
 
         self.acceleration = np.array(self.acceleration)
         self.gyroscope = np.array(self.gyroscope)
@@ -101,31 +102,32 @@ class MovuinoDataSet():
             self.gravity.append(np.array([gx[k], gy[k], gz[k]]))
         self.gravity = np.array(self.gravity)
 
-        #--- filtrage ----
+        #--------------------------- FILTER ----------------------------------
+
         ax_pb = BandPassButterworthFilter(3, [0.01, 0.5], self.acceleration[:, 0])
         ay_pb = BandPassButterworthFilter(3, [0.01, 0.5], self.acceleration[:, 1])
         az_pb = BandPassButterworthFilter(3, [0.01, 0.5], self.acceleration[:, 2])
-        """
-        gx_lp = LowPassFilter(self.time, self.gyroscope[:, 0], self.Te, 3)
-        gy_lp = LowPassFilter(self.time, self.gyroscope[:, 1], self.Te, 3)
-        gz_lp = LowPassFilter(self.time, self.gyroscope[:, 2], self.Te, 3)
+
+        gx_lp = LowPassFilter(self.time, self.gyroscope[:, 0], self.Te, 2)
+        gy_lp = LowPassFilter(self.time, self.gyroscope[:, 1], self.Te, 2)
+        gz_lp = LowPassFilter(self.time, self.gyroscope[:, 2], self.Te, 2)
         """
         gx_lp = LowPassButterworthFilter(3, 0.1, self.gyroscope[:, 0])
         gy_lp = LowPassButterworthFilter(3, 0.1, self.gyroscope[:, 1])
         gz_lp = LowPassButterworthFilter(3, 0.1, self.gyroscope[:, 2])
-
+        
         gx_lp = self.FiltreNBPointAverage(10, self.gyroscope[:, 0])
         gy_lp = self.FiltreNBPointAverage(10, self.gyroscope[:, 1])
         gz_lp = self.FiltreNBPointAverage(10, self.gyroscope[:, 2])
-
+        """
+        self.acceleration_pb = self.acceleration - self.gravity
 
         for k in range(self.nb_line):
-            self.acceleration_pb.append(np.array([ax_pb[k], ay_pb[k], az_pb[k]]))
+            #self.acceleration_pb.append(np.array([ax_pb[k], ay_pb[k], az_pb[k]]))
             self.gyroscope_lp.append(np.array([gx_lp[k], gy_lp[k], gz_lp[k]]))
 
-        self.EulerIntegration(self.gyroscope_lp, self.posAngGyr_filter_lp)
-        self.EulerIntegration(self.acceleration_pb, self.velocity_filter)
-
+        self.posAngGyr_filter_lp = self.EulerIntegration(self.gyroscope_lp)
+        self.velocity_filter = self.EulerIntegration(self.acceleration_pb)
 
         self.acceleration_pb = np.array(self.acceleration_pb)
         self.gyroscope_lp = np.array(self.gyroscope_lp)
@@ -140,19 +142,19 @@ class MovuinoDataSet():
         for arg in args:
             arg = np.array(arg)
 
-    def EulerIntegration(self, Uprime, U):
-
+    def EulerIntegration(self, Uprime):
+        U = [np.array([0, 0, 0])]
         for k in range(self.nb_line-1):
             pas = self.time[k + 1] - self.time[k]
 
             Ux = Uprime[k][0] * pas + U[k][0]
             Uy = Uprime[k][1] * pas + U[k][1]
             Uz = Uprime[k][2] * pas + U[k][2]
-            print(Uz)
             U.append(np.array([Ux, Uy, Uz]))
+        return U
 
 
-    def FiltreNBPointAverage(self, nb_point, sig):
+    def FiltreNBPointAverage(self, nb_point, sig): #TODO
         array_to_moy = []
         compteur = 0
         sig_filtre = []
@@ -166,15 +168,12 @@ class MovuinoDataSet():
         for k in range(len(sig)):
             array_to_moy.append(sig[k])
             if (len(array_to_moy) >= nb_point) :
-                sig_filtre.append(moyenne(array_to_moy[k+1-nb_point:k]))
-
+                sig_filtre.append(moyenne(array_to_moy[k+1-nb_point:k+1]))
             else:
                 sig_filtre.append(moyenne(array_to_moy))
 
         return sig_filtre
 
-
-        return sig_filtre
     def StockIntoNewFile(self, filepath):
         self.rawData.to_csv(filepath + "_treated" + ".csv", sep=",", index=False, index_label=False)
 

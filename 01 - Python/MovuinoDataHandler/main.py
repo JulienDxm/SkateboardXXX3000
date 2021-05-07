@@ -19,8 +19,9 @@ def butter_bandpass_filter(sig, lowcut, highcut, fs, order=5):
         sig_filtered = signal.sosfilt(sos, sig)
         return sig_filtered
 
-folderPath = "..\\..\\Data\\Cri_tricks_stationary\\"
-fileName = "record_simpleMove"
+folderPath = "..\\..\\Data\\Cri_tricks_stationary_5_goodOne\\Only_tricks_notransition\\"
+#folderPath = "..\\..\\Data\\Movuino-heel_50HZ_smooth15\\"
+fileName = "record"
 
 path = folderPath + fileName
 
@@ -73,10 +74,13 @@ if toExtract:
 
 
 if toDataManage:
-    dataSet = dm.MovuinoDataSet("..\\..\\Data\\Cri_tricks_stationary\\" + "record_simpleMove_1")
-    dataSet.run()
-    Te = dataSet.Te
-    print(1/Te)
+    print(nbRecord)
+    nbRecord = 11
+    for i in range(1, nbRecord+1):
+        dataSet = dm.MovuinoDataSet(folderPath + fileName + "_"+str(i))
+        dataSet.run()
+        Te = dataSet.Te
+        print(1/Te)
     """
 
     a_pb = butter_bandpass_filter(dataSet.acceleration[:, 2], 0.15, 4.5, 1/Te, order = 3)

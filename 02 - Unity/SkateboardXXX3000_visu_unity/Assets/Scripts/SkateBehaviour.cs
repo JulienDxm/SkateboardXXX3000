@@ -14,7 +14,7 @@ namespace Skateboard
         private MovuinoDataSet movuinoDataSet;
 
         //private string dataPath = ".\\Data_visu\\Movuino-heel_50HZ_smooth15treated.csv";
-        private string dataPath = ".\\Data_visu\\record_simpleMove_1_treated.csv";
+        private string dataPath = ".\\Data_visu\\Data_type_for_the_moment\\record_8_treated.csv";
 
         private float startTime;
         private int i;
@@ -27,14 +27,25 @@ namespace Skateboard
         {
             movuinoDataSet = new MovuinoDataSet(dataPath);
             i = 1;
+            IEnumerator ok()
+            {
+                this.gameObject.transform.Rotate(new Vector3(0, 45, 0));
+                yield return new WaitForSeconds(0.5f);
+                this.gameObject.transform.Rotate(new Vector3(180, 0, 0));
+                yield return new WaitForSeconds(0.5f);
+                this.gameObject.transform.Rotate(new Vector3(0, 45, 0));
+                
+            }
+            //StartCoroutine(ok());
 
-            movuinoDataSet.showColumns();
-            InvokeRepeating("Rotate", 2f, 0.02f);
+            //movuinoDataSet.showColumns();
+            print(movuinoDataSet.GetValue("time", 0));
+            InvokeRepeating("Rotate", 2f, (movuinoDataSet.GetValue("time", 1)- movuinoDataSet.GetValue("time", 0)));
         }
 
         private void Rotate()
         {
-            Vector3 deltaTheta = movuinoDataSet.GetVector("posAngX", "posAngY", "posAngZ", i) - movuinoDataSet.GetVector("posAngX", "posAngY", "posAngZ", i-1);
+            Vector3 deltaTheta = movuinoDataSet.GetVector("posAngY", "posAngX", "posAngZ", i) - movuinoDataSet.GetVector("posAngY", "posAngX", "posAngZ", i-1);
             this.gameObject.transform.Rotate(deltaTheta);
 
             i++;
